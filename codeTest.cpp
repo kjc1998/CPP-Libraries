@@ -3,14 +3,27 @@
 int main()
 {
     SimpleMatrix<double> matrix_coef({
-        {1, 2, 3},
-        {2, 5, 3},
-        {6, 2, 3},
+        {0, 1, 1, -2},
+        {1, 2, -1, 0},
+        {2, 4, 1, -3},
+        {1, 4, -7, -1},
     });
-    vector<double> matrix = matrix_coef.getVectorSolve({{4}, {6}, {20}});
-    for (int i = 0; i < (int)matrix.size(); ++i)
+    double determinant = matrix_coef.getDeterminant();
+    vector<vector<double>> adjoint = matrix_coef.getAdjoint();
+    vector<vector<double>> inverse = matrix_coef.getInverse();
+    vector<double> solve = matrix_coef.getVectorSolve({{-3}, {2}, {-2}, {-19}});
+    /*
+    for (int i = 0; i < (int)adjoint.size(); ++i)
     {
-        cout << matrix[i] << endl;
+        for (int j = 0; j < (int)adjoint[0].size(); ++j)
+        {
+            cout << inverse[i][j] << endl;
+        }
+    }
+    */
+    for (int i = 0; (int)i < solve.size(); ++i)
+    {
+        cout << solve[i] << endl;
     }
     return 0;
 }

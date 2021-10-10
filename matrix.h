@@ -21,7 +21,7 @@ public:
         mainColumn_ = mainMatrix_[0].size();
     }
 
-    void matrixInfo()
+    void getMatrixInfo()
     {
         std::cout << "Matrix row:\t" << mainRow_ << std::endl;
         std::cout << "Matrix column:\t" << mainColumn_ << std::endl;
@@ -36,7 +36,7 @@ public:
     numbers getDeterminant()
     {
         numbers ans = 0;
-        vector<numbers> ansVector = this->findPRow(mainMatrix_, 0);
+        vector<numbers> ansVector = this->findPRow(mainMatrix_);
         for (int i = 0; i < (int)ansVector.size(); ++i)
         {
             ans += ansVector[i];
@@ -66,7 +66,35 @@ public:
 
     vector<vector<numbers>> getAdjoint()
     {
-        return this->findAdjoint();
+        int currentRowNumber = mainMatrix_.size();
+        int currentColumnNumber = mainMatrix_[0].size();
+        if (currentRowNumber < 2 && currentColumnNumber < 2)
+        {
+            return mainMatrix_;
+        }
+        vector<vector<numbers>> ans;
+        for (int i = 0; i < (int)currentRowNumber; ++i)
+        {
+            vector<numbers> adjointRow = {};
+            for (int j = 0; j < (int)currentColumnNumber; ++j)
+            {
+                int sign = ((i + j + 1) % 2 == 1) ? 1 : -1;
+
+                // Determinant of Minor Handling //
+                vector<vector<numbers>> minor = findMinor(i, j, mainMatrix_);
+                vector<numbers> pRow = this->findPRow(minor);
+                numbers pRowValue = 0;
+                for (int k = 0; k < (int)pRow.size(); ++k)
+                {
+                    pRowValue += sign * pRow[k];
+                }
+                // END //
+
+                adjointRow.push_back(pRowValue);
+            }
+            ans.push_back(adjointRow);
+        }
+        return ans;
     }
 
     //sequence specific, standardised to matrix multiplcation only
@@ -124,8 +152,7 @@ public:
         {
             return {{}};
         }
-        vector<vector<numbers>> transposedMatrix = this->getTranspose(this->findAdjoint());
-        // matrix multiplication
+        vector<vector<numbers>> transposedMatrix = this->getTranspose(this->getAdjoint());
         vector<vector<numbers>> inverseMatrix = this->getMultiplication({{1 / determinant}}, transposedMatrix);
         return inverseMatrix;
     }
@@ -143,7 +170,6 @@ public:
     }
 
 private:
-    // private variables and methods
     vector<vector<numbers>> mainMatrix_;
     unsigned int mainRow_, mainColumn_;
 
@@ -154,7 +180,7 @@ private:
             numbers ans = (currentMatrix[0][0] * currentMatrix[1][1]) - (currentMatrix[0][1] * currentMatrix[1][0]);
             return ans;
         }
-        // can't find determinant
+        // can't resolve determinant
         return 0;
     }
 
@@ -174,7 +200,7 @@ private:
                 }
                 remainingRow.push_back(currentMatrix[i][j]);
             }
-            // can't push back an empty vector
+            // skip empty vector
             if (remainingRow.size() > 0)
             {
                 ans.push_back(remainingRow);
@@ -183,60 +209,33 @@ private:
         return ans;
     }
 
-    vector<numbers> findPRow(vector<vector<numbers>> currentMatrix, int ithRow, bool coFactor = false)
+    vector<numbers> findPRow(vector<vector<numbers>> currentMatrix)
     {
         vector<numbers> ans;
         int currentRowNumber = currentMatrix.size();
         int currentColumnNumber = currentMatrix[0].size();
         if (currentRowNumber <= 2 && currentColumnNumber <= 2)
         {
-            // consistent with recursive return type
             numbers ansValue = tbtDeterminant(currentMatrix);
             ans.push_back(ansValue);
             return ans;
         }
-        // only dealing with i_th row
+        // only deal with 0th row
         for (int j = 0; j < (int)currentRowNumber; ++j)
         {
-            int sign = ((ithRow + j + 1) % 2 == 1) ? 1 : -1;
-            // resets in every loop
-            numbers pRowValue = 0;
-            vector<vector<numbers>> remainingMatrix = findMinor(ithRow, j, currentMatrix);
+            int sign = ((j + 1) % 2 == 1) ? 1 : -1;
 
-            vector<numbers> pRow = findPRow(remainingMatrix, 0); // will always return determinant of minor
+            // Determinant of Minor Handling //
+            numbers pRowValue = 0;
+            vector<vector<numbers>> remainingMatrix = findMinor(0, j, currentMatrix);
+            vector<numbers> pRow = findPRow(remainingMatrix);
             for (int k = 0; k < (int)pRow.size(); ++k)
             {
-                pRowValue += pRow[k];
+                pRowValue += sign * currentMatrix[0][j] * pRow[k];
             }
-            // two types of operation
-            numbers value;
-            if (coFactor)
-            {
-                value = sign * pRowValue;
-            }
-            else
-            {
-                value = sign * currentMatrix[ithRow][j] * pRowValue;
-            }
-            ans.push_back(value);
-        }
-        return ans;
-    }
+            // END //
 
-    vector<vector<numbers>> findAdjoint()
-    {
-        int currentRowNumber = mainMatrix_.size();
-        int currentColumnNumber = mainMatrix_[0].size();
-        // square Matrix of One
-        if (currentRowNumber < 2 && currentColumnNumber < 2)
-        {
-            return mainMatrix_;
-        }
-        vector<vector<numbers>> ans;
-        for (int i = 0; i < (int)currentRowNumber; ++i)
-        {
-            vector<numbers> pRow = this->findPRow(mainMatrix_, i, true);
-            ans.push_back(pRow);
+            ans.push_back(pRowValue);
         }
         return ans;
     }
