@@ -10,11 +10,11 @@
 using namespace std;
 
 template <typename numbers>
-class TwoDMatrix
+class SimpleMatrix
 {
 public:
     //constructor for defining a matrix
-    TwoDMatrix(vector<vector<numbers>> matrix_coef)
+    SimpleMatrix(vector<vector<numbers>> matrix_coef)
     {
         mainMatrix_ = matrix_coef;
         mainRow_ = mainMatrix_.size();
@@ -241,33 +241,3 @@ private:
         return ans;
     }
 };
-
-main()
-{
-
-    TwoDMatrix<double> matrix_coef({
-        {1, 2, 3},
-        {2, 5, 3},
-        {6, 2, 3},
-    });
-    vector<double> matrix = matrix_coef.getVectorSolve({{4}, {6}, {20}});
-    for (int i = 0; i < (int)matrix.size(); ++i)
-    {
-        cout << matrix[i] << endl;
-    }
-    return 0;
-}
-
-/*
-{3,8},
-{4,6} -14
-
-{6, 1, 1},
-{4, -2, 5},
-{2, 8, 7}, -306
-
-{1, 0, 4, -6},
-{2, 5, 0, 3},
-{-1, 2, 3, 5},
-{2, 1, -2, 3},
-*/
