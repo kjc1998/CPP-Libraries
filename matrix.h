@@ -20,6 +20,33 @@ public:
         vectorSize_ = (int)vector_coef.size();
         rowVector_ = rowVector;
     }
+    void printOutline()
+    {
+        string line = "";
+        if (rowVector_)
+        {
+            line += "|\t";
+            for (int i = 0; i < (int)mainVector_.size(); ++i)
+            {
+                string num_text = to_string(mainVector_[i]);
+                line += num_text.substr(0, num_text.find(".") + 3) + "  ";
+            }
+            line += "\t|";
+        }
+        else
+        {
+            for (int i = 0; i < (int)mainVector_.size(); ++i)
+            {
+                string num_text = to_string(mainVector_[i]);
+                line += "|\t" + num_text.substr(0, num_text.find(".") + 3) + "\t|";
+                if (i != mainVector_.size() - 1)
+                {
+                    line += "\n";
+                }
+            }
+        }
+        cout << line << endl;
+    }
     //getter function (vector)
     vector<numbers> getVector()
     {
@@ -29,6 +56,11 @@ public:
     bool isRowVector()
     {
         return rowVector_;
+    }
+
+    SimpleVector<numbers> getTranspose()
+    {
+        return SimpleVector<numbers>(mainVector_, !rowVector_);
     }
     // scalar multiplication
     SimpleVector<numbers> operator*(numbers target)
@@ -57,6 +89,20 @@ public:
         mainMatrix_ = matrix_coef;
         mainRow_ = mainMatrix_.size();
         mainColumn_ = mainMatrix_[0].size();
+    }
+    void printOutline()
+    {
+        for (int i = 0; i < (int)mainMatrix_.size(); ++i)
+        {
+            string line = "|\t";
+            for (int j = 0; (int)j < mainMatrix_[0].size(); ++j)
+            {
+                string num_text = to_string(mainMatrix_[i][j]);
+                line += num_text.substr(0, num_text.find(".") + 3) + "  ";
+            }
+            line += "\t|";
+            cout << line << endl;
+        }
     }
 
     void getMatrixInfo()

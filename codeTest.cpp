@@ -13,11 +13,6 @@ int main()
     SimpleMatrix<double> inverse = matrix_coef.getInverse();
     SimpleVector<double> solve = matrix_coef.getVectorSolve(SimpleVector<double>({-3.0, 2.0, -2.0, -19.0}, false));
     vector<double> solveVector = solve.getVector();
-    for (int i = 0; (int)i < solveVector.size(); ++i)
-    {
-        cout << solveVector[i] << endl;
-    }
-    matrix_coef.getMatrixInfo();
     SimpleMatrix<> objB({
         {1, 2, 3},
         {5, 6, 7},
@@ -26,5 +21,8 @@ int main()
     });
     matrix_coef *objB;
     matrix_coef * 2;
+    matrix_coef.printOutline();
+    solve.printOutline();
+    solve.getTranspose().printOutline();
     return 0;
 }
