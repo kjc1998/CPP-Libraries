@@ -9,22 +9,21 @@ int main()
         {1, 4, -7, -1},
     });
     double determinant = matrix_coef.getDeterminant();
-    vector<vector<double>> adjoint = matrix_coef.getAdjoint();
-    vector<vector<double>> inverse = matrix_coef.getInverse();
-    vector<double> solve = matrix_coef.getVectorSolve({{-3}, {2}, {-2}, {-19}});
-    /*
-    for (int i = 0; i < (int)adjoint.size(); ++i)
+    SimpleMatrix<double> adjoint = matrix_coef.getAdjoint();
+    SimpleMatrix<double> inverse = matrix_coef.getInverse();
+    SimpleVector<double> solve = matrix_coef.getVectorSolve(SimpleVector<double>({-3.0, 2.0, -2.0, -19.0}, false));
+    for (int i = 0; (int)i < solve.vectorSize_; ++i)
     {
-        for (int j = 0; j < (int)adjoint[0].size(); ++j)
-        {
-            cout << inverse[i][j] << endl;
-        }
-    }
-    */
-    for (int i = 0; (int)i < solve.size(); ++i)
-    {
-        cout << solve[i] << endl;
+        cout << solve.mainVector_[i] << endl;
     }
     matrix_coef.getMatrixInfo();
+    SimpleMatrix<> objB({
+        {1, 2, 3},
+        {5, 6, 7},
+        {3, 4, 5},
+        {22, 1, 2},
+    });
+    matrix_coef *objB;
+    matrix_coef * 2;
     return 0;
 }

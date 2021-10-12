@@ -10,10 +10,36 @@
 using namespace std;
 
 template <typename numbers = double>
+class SimpleVector
+{
+public:
+    vector<numbers> mainVector_;
+    unsigned int vectorSize_;
+    bool rowVector_;
+    // 1D Vector
+    SimpleVector(vector<numbers> vector_coef, bool rowVector = true)
+    {
+        mainVector_ = vector_coef;
+        vectorSize_ = (int)vector_coef.size();
+        rowVector_ = rowVector;
+    }
+    // scalar multiplication
+    SimpleVector<numbers> operator*(numbers target)
+    {
+        vector<numbers> ans;
+        for (int i = 0; i < (int)mainVector_.size(); ++i)
+        {
+            ans.push_back(mainVector_[i] * target);
+        }
+        return SimpleVector(ans, rowVector_); // size remain the same
+    }
+};
+
+template <typename numbers = double>
 class SimpleMatrix
 {
 public:
-    //constructor for defining a matrix
+    // 2D Matrix
     SimpleMatrix(vector<vector<numbers>> matrix_coef)
     {
         mainMatrix_ = matrix_coef;
@@ -42,13 +68,18 @@ public:
         return ans;
     }
 
+    vector<vector<numbers>> getMatrix()
+    {
+        return mainMatrix_;
+    }
+
     numbers getDeterminant()
     {
         numbers ans = this->findDeterminant(mainMatrix_);
         return ans;
     }
 
-    vector<vector<numbers>> getTranspose(vector<vector<numbers>> currentMatrix = {{}})
+    SimpleMatrix<numbers> getTranspose(vector<vector<numbers>> currentMatrix = {{}})
     {
         vector<vector<numbers>> ans;
         // default to defined matrix
@@ -65,10 +96,10 @@ public:
             }
             ans.push_back(transposed_row);
         }
-        return ans;
+        return SimpleMatrix<numbers>(ans);
     }
 
-    vector<vector<numbers>> getAdjoint()
+    SimpleMatrix<numbers> getAdjoint()
     {
         int currentRowNumber = mainMatrix_.size();
         int currentColumnNumber = mainMatrix_[0].size();
@@ -94,85 +125,111 @@ public:
             }
             ans.push_back(adjointRow);
         }
-        return ans;
+        return SimpleMatrix<numbers>(ans);
     }
 
-    //sequence specific, standardised to matrix multiplcation only
-    // if scalar quantity is present, set to targetA
-    vector<vector<numbers>> getMultiplication(vector<vector<numbers>> targetA, vector<vector<numbers>> targetB)
-    {
-        vector<vector<numbers>> ans;
-        if (targetA[0].size() == 0)
-        {
-            return {{}};
-        }
-        if (targetA[0].size() == 1)
-        {
-            for (int i = 0; i < (int)targetB.size(); ++i)
-            {
-                vector<numbers> currentRow = {};
-                for (int j = 0; j < (int)targetB[0].size(); ++j)
-                {
-                    currentRow.push_back(targetA[0][0] * targetB[i][j]);
-                }
-                ans.push_back(currentRow);
-            }
-        }
-        else
-        {
-            if (targetA[0].size() == targetB.size())
-            {
-                for (int i = 0; i < (int)targetA.size(); ++i) // targetA row
-                {
-                    vector<numbers> currentRow = {};
-                    for (int j = 0; j < (int)targetB[0].size(); ++j) // targetB column
-                    {
-                        numbers value = 0;
-                        for (int k = 0; k < (int)targetB.size(); ++k) // multiplication instance
-                        {
-                            value += targetA[i][k] * targetB[k][j];
-                        }
-                        currentRow.push_back(value);
-                    }
-                    ans.push_back(currentRow);
-                }
-            }
-            else
-            {
-                return {{}};
-            }
-        }
-        return ans;
-    }
-
-    vector<vector<numbers>> getInverse()
+    SimpleMatrix<numbers> getInverse()
     {
         numbers determinant = this->getDeterminant();
         if (determinant == 0)
         {
             return {{}};
         }
-        vector<vector<numbers>> transposedMatrix = this->getTranspose(this->getAdjoint());
-        vector<vector<numbers>> inverseMatrix = this->getMultiplication({{1 / determinant}}, transposedMatrix);
+        SimpleMatrix<numbers> transposedMatrix = this->getTranspose(this->getAdjoint().getMatrix());
+        SimpleMatrix<numbers> inverseMatrix = transposedMatrix.operator*(1 / determinant);
         return inverseMatrix;
     }
 
-    vector<numbers> getVectorSolve(vector<vector<numbers>> vectorAns)
+    SimpleVector<numbers> getVectorSolve(SimpleVector<numbers> vectorAns)
     {
-        vector<numbers> ans = {};
-        vector<vector<numbers>> inverseMatrix = this->getInverse();
-        vector<vector<numbers>> ansRaw = this->getMultiplication(inverseMatrix, vectorAns);
-        for (int i = 0; i < (int)ansRaw.size(); ++i)
-        {
-            ans.push_back(ansRaw[i][0]);
-        }
+        SimpleMatrix<numbers> inverseMatrix = this->getInverse();
+        SimpleVector<numbers> ans = inverseMatrix.operator*(vectorAns);
         return ans;
+    }
+
+    // Operator overloading of type SimpleMatrix
+    SimpleMatrix<numbers> operator*(SimpleMatrix<numbers> target)
+    {
+        // check valid
+        vector<vector<numbers>> ans;
+        if (mainMatrix_[0].size() != target.mainMatrix_.size())
+        {
+            throw invalid_argument("Matrix size does not match.");
+        }
+        for (int i = 0; i < (int)mainMatrix_.size(); ++i)
+        {
+            vector<numbers> currentRow = {};
+            for (int j = 0; j < (int)target.mainMatrix_[0].size(); ++j)
+            {
+                numbers value = 0;
+                for (int k = 0; k < (int)target.mainMatrix_.size(); ++k)
+                {
+                    value += mainMatrix_[i][k] * target.mainMatrix_[k][j];
+                }
+                currentRow.push_back(value);
+            }
+            ans.push_back(currentRow);
+        }
+        return SimpleMatrix<numbers>(ans);
+    }
+    // Operator overloading of type Scalar
+    SimpleMatrix<numbers> operator*(numbers target)
+    {
+        vector<vector<numbers>> ans;
+        for (int i = 0; i < (int)mainMatrix_.size(); ++i)
+        {
+            vector<numbers> currentRow = {};
+            for (int j = 0; j < (int)mainMatrix_[0].size(); ++j)
+            {
+                currentRow.push_back(mainMatrix_[i][j] * target);
+            }
+            ans.push_back(currentRow);
+        }
+        return SimpleMatrix<numbers>(ans);
+    }
+    // Operator overloading of type SimpleVector (only works for column vector)
+    SimpleVector<numbers> operator*(SimpleVector<numbers> target)
+    {
+        vector<numbers> ans;
+        if (target.rowVector_)
+        {
+            if (mainMatrix_.size() != target.mainVector_.size())
+            {
+                throw invalid_argument("Vector size does not match.");
+            }
+        }
+        else
+        {
+            if (mainMatrix_[0].size() != target.mainVector_.size())
+            {
+                throw invalid_argument("Vector size does not match.");
+            }
+        }
+
+        for (int i = 0; i < (int)mainMatrix_.size(); ++i)
+        {
+            numbers value = 0;
+            for (int j = 0; j < (int)mainMatrix_[0].size(); ++j)
+            {
+                if (target.rowVector_)
+                {
+                    value += target.mainVector_[j] * mainMatrix_[j][i];
+                }
+                else
+                {
+                    value += mainMatrix_[i][j] * target.mainVector_[j];
+                }
+            }
+            ans.push_back(value);
+        }
+        return SimpleVector<numbers>(ans, target.rowVector_); // vector size will remain
     }
 
 private:
     vector<vector<numbers>> mainMatrix_;
     unsigned int mainRow_, mainColumn_;
 
+    // private methods
     numbers tbtDeterminant(vector<vector<numbers>> currentMatrix)
     {
         if (currentMatrix.size() == 2 && currentMatrix[0].size() == 2)
