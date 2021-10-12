@@ -9,7 +9,7 @@
 #include <algorithm>
 using namespace std;
 
-template <typename numbers>
+template <typename numbers = double>
 class SimpleMatrix
 {
 public:
@@ -23,8 +23,17 @@ public:
 
     void getMatrixInfo()
     {
-        std::cout << "Matrix row:\t" << mainRow_ << std::endl;
-        std::cout << "Matrix column:\t" << mainColumn_ << std::endl;
+        std::cout << "Matrix row:\t\t" << mainRow_ << std::endl;
+        std::cout << "Matrix column:\t\t" << mainColumn_ << std::endl;
+        numbers determinant = this->getDeterminant();
+        if (determinant)
+        {
+            std::cout << "Matrix determinant:\t" << determinant << endl;
+        }
+        else
+        {
+            std::cout << "Matrix is not unique" << endl;
+        }
     }
 
     bool isSquareMatrix()
@@ -35,12 +44,7 @@ public:
 
     numbers getDeterminant()
     {
-        numbers ans = 0;
-        vector<numbers> ansVector = this->findPRow(mainMatrix_);
-        for (int i = 0; i < (int)ansVector.size(); ++i)
-        {
-            ans += ansVector[i];
-        }
+        numbers ans = this->findDeterminant(mainMatrix_);
         return ans;
     }
 
@@ -82,12 +86,8 @@ public:
 
                 // Determinant of Minor Handling //
                 vector<vector<numbers>> minor = findMinor(i, j, mainMatrix_);
-                vector<numbers> pRow = this->findPRow(minor);
-                numbers pRowValue = 0;
-                for (int k = 0; k < (int)pRow.size(); ++k)
-                {
-                    pRowValue += sign * pRow[k];
-                }
+                numbers determinantMinor = this->findDeterminant(minor);
+                numbers pRowValue = sign * determinantMinor;
                 // END //
 
                 adjointRow.push_back(pRowValue);
@@ -209,15 +209,14 @@ private:
         return ans;
     }
 
-    vector<numbers> findPRow(vector<vector<numbers>> currentMatrix)
+    numbers findDeterminant(vector<vector<numbers>> currentMatrix)
     {
-        vector<numbers> ans;
+        numbers ans = 0;
         int currentRowNumber = currentMatrix.size();
         int currentColumnNumber = currentMatrix[0].size();
         if (currentRowNumber <= 2 && currentColumnNumber <= 2)
         {
-            numbers ansValue = tbtDeterminant(currentMatrix);
-            ans.push_back(ansValue);
+            ans = tbtDeterminant(currentMatrix);
             return ans;
         }
         // only deal with 0th row
@@ -226,16 +225,10 @@ private:
             int sign = ((j + 1) % 2 == 1) ? 1 : -1;
 
             // Determinant of Minor Handling //
-            numbers pRowValue = 0;
             vector<vector<numbers>> remainingMatrix = findMinor(0, j, currentMatrix);
-            vector<numbers> pRow = findPRow(remainingMatrix);
-            for (int k = 0; k < (int)pRow.size(); ++k)
-            {
-                pRowValue += sign * currentMatrix[0][j] * pRow[k];
-            }
+            numbers determinantMinor = findDeterminant(remainingMatrix);
+            ans += sign * currentMatrix[0][j] * determinantMinor;
             // END //
-
-            ans.push_back(pRowValue);
         }
         return ans;
     }
