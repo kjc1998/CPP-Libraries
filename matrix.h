@@ -13,15 +13,22 @@ template <typename numbers = double>
 class SimpleVector
 {
 public:
-    vector<numbers> mainVector_;
-    unsigned int vectorSize_;
-    bool rowVector_;
     // 1D Vector
     SimpleVector(vector<numbers> vector_coef, bool rowVector = true)
     {
         mainVector_ = vector_coef;
         vectorSize_ = (int)vector_coef.size();
         rowVector_ = rowVector;
+    }
+    //getter function (vector)
+    vector<numbers> getVector()
+    {
+        return mainVector_;
+    }
+    //getter function (vector type)
+    bool isRowVector()
+    {
+        return rowVector_;
     }
     // scalar multiplication
     SimpleVector<numbers> operator*(numbers target)
@@ -33,6 +40,11 @@ public:
         }
         return SimpleVector(ans, rowVector_); // size remain the same
     }
+
+private:
+    vector<numbers> mainVector_;
+    unsigned int vectorSize_;
+    bool rowVector_;
 };
 
 template <typename numbers = double>
@@ -67,7 +79,7 @@ public:
         bool ans = (mainRow_ == mainColumn_) ? true : false;
         return ans;
     }
-
+    // getter function
     vector<vector<numbers>> getMatrix()
     {
         return mainMatrix_;
@@ -146,7 +158,6 @@ public:
         SimpleVector<numbers> ans = inverseMatrix.operator*(vectorAns);
         return ans;
     }
-
     // Operator overloading of type SimpleMatrix
     SimpleMatrix<numbers> operator*(SimpleMatrix<numbers> target)
     {
@@ -191,16 +202,16 @@ public:
     SimpleVector<numbers> operator*(SimpleVector<numbers> target)
     {
         vector<numbers> ans;
-        if (target.rowVector_)
+        if (target.isRowVector())
         {
-            if (mainMatrix_.size() != target.mainVector_.size())
+            if (mainMatrix_.size() != target.getVector().size())
             {
                 throw invalid_argument("Vector size does not match.");
             }
         }
         else
         {
-            if (mainMatrix_[0].size() != target.mainVector_.size())
+            if (mainMatrix_[0].size() != target.getVector().size())
             {
                 throw invalid_argument("Vector size does not match.");
             }
@@ -211,18 +222,18 @@ public:
             numbers value = 0;
             for (int j = 0; j < (int)mainMatrix_[0].size(); ++j)
             {
-                if (target.rowVector_)
+                if (target.isRowVector())
                 {
-                    value += target.mainVector_[j] * mainMatrix_[j][i];
+                    value += target.getVector()[j] * mainMatrix_[j][i];
                 }
                 else
                 {
-                    value += mainMatrix_[i][j] * target.mainVector_[j];
+                    value += mainMatrix_[i][j] * target.getVector()[j];
                 }
             }
             ans.push_back(value);
         }
-        return SimpleVector<numbers>(ans, target.rowVector_); // vector size will remain
+        return SimpleVector<numbers>(ans, target.isRowVector()); // vector size will remain
     }
 
 private:

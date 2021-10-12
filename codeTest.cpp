@@ -12,9 +12,10 @@ int main()
     SimpleMatrix<double> adjoint = matrix_coef.getAdjoint();
     SimpleMatrix<double> inverse = matrix_coef.getInverse();
     SimpleVector<double> solve = matrix_coef.getVectorSolve(SimpleVector<double>({-3.0, 2.0, -2.0, -19.0}, false));
-    for (int i = 0; (int)i < solve.vectorSize_; ++i)
+    vector<double> solveVector = solve.getVector();
+    for (int i = 0; (int)i < solveVector.size(); ++i)
     {
-        cout << solve.mainVector_[i] << endl;
+        cout << solveVector[i] << endl;
     }
     matrix_coef.getMatrixInfo();
     SimpleMatrix<> objB({
