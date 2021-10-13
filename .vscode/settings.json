@@ -9,6 +9,12 @@
     "stdexcept": "cpp",
     "iostream": "cpp",
     "algorithm": "cpp",
-    "string": "cpp"
+    "string": "cpp",
+    "array": "cpp",
+    "initializer_list": "cpp",
+    "list": "cpp",
+    "xhash": "cpp",
+    "xtree": "cpp",
+    "xutility": "cpp"
   }
 }

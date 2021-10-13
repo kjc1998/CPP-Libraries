@@ -13,6 +13,7 @@ public:
         vectorSize_ = (int)vector_coef.size();
         rowVector_ = rowVector;
     }
+
     void printOutline()
     {
         string line = "";
@@ -190,13 +191,6 @@ public:
         SimpleMatrix<numbers> inverseMatrix = transposedMatrix.operator*(1 / determinant);
         return inverseMatrix;
     }
-
-    SimpleVector<numbers> getVectorSolve(SimpleVector<numbers> vectorAns)
-    {
-        SimpleMatrix<numbers> inverseMatrix = this->getInverse();
-        SimpleVector<numbers> ans = inverseMatrix.operator*(vectorAns);
-        return ans;
-    }
     // Operator overloading of type SimpleMatrix
     SimpleMatrix<numbers> operator*(SimpleMatrix<numbers> target)
     {
@@ -236,43 +230,6 @@ public:
             ans.push_back(currentRow);
         }
         return SimpleMatrix<numbers>(ans);
-    }
-    // Operator overloading of type SimpleVector (only works for column vector)
-    SimpleVector<numbers> operator*(SimpleVector<numbers> target)
-    {
-        vector<numbers> ans;
-        if (target.isRowVector())
-        {
-            if (mainMatrix_.size() != target.getVector().size())
-            {
-                throw invalid_argument("Vector size does not match.");
-            }
-        }
-        else
-        {
-            if (mainMatrix_[0].size() != target.getVector().size())
-            {
-                throw invalid_argument("Vector size does not match.");
-            }
-        }
-
-        for (int i = 0; i < (int)mainMatrix_.size(); ++i)
-        {
-            numbers value = 0;
-            for (int j = 0; j < (int)mainMatrix_[0].size(); ++j)
-            {
-                if (target.isRowVector())
-                {
-                    value += target.getVector()[j] * mainMatrix_[j][i];
-                }
-                else
-                {
-                    value += mainMatrix_[i][j] * target.getVector()[j];
-                }
-            }
-            ans.push_back(value);
-        }
-        return SimpleVector<numbers>(ans, target.isRowVector()); // vector size will remain
     }
 
 private:
@@ -340,3 +297,99 @@ private:
         return ans;
     }
 };
+
+/* OPERATOR OVERLOADING */
+
+// SCALAR (other ordering handled in class declaration)
+template <typename numbers = double>
+SimpleVector<numbers> operator*(numbers target, SimpleVector<numbers> currentVector)
+{
+    vector<numbers> ans;
+    for (int i = 0; i < (int)currentVector.getVector().size(); ++i)
+    {
+        ans.push_back(currentVector.getVector()[i] * target);
+    }
+    return SimpleVector<numbers>(ans, currentVector.isRowVector());
+};
+template <typename numbers = double>
+SimpleMatrix<numbers> operator*(numbers target, SimpleMatrix<numbers> currentMatrix)
+{
+    vector<vector<numbers>> ans;
+    for (int i = 0; i < (int)currentMatrix.getMatrix().size(); ++i)
+    {
+        vector<numbers> currentRow = {};
+        for (int j = 0; j < (int)currentMatrix.getMatrix()[0].size(); ++j)
+        {
+            currentRow.push_back(currentMatrix.getMatrix()[i][j] * target);
+        }
+        ans.push_back(currentRow);
+    }
+    return SimpleMatrix<numbers>(ans);
+}
+
+// MATRIX and VECTOR
+template <typename numbers = double>
+SimpleVector<numbers> operator*(SimpleMatrix<numbers> currentMatrix, SimpleVector<numbers> target)
+{
+    vector<numbers> ans;
+    if (target.isRowVector())
+    {
+        throw invalid_argument("Vector size does not match.");
+    }
+    else
+    {
+        // column to vector row check
+        if (currentMatrix.getMatrix()[0].size() != target.getVector().size())
+        {
+            throw invalid_argument("Vector size does not match.");
+        }
+    }
+
+    for (int i = 0; i < (int)currentMatrix.getMatrix().size(); ++i)
+    {
+        numbers value = 0;
+        for (int j = 0; j < (int)currentMatrix.getMatrix()[0].size(); ++j)
+        {
+            value += target.getVector()[j] * currentMatrix.getMatrix()[j][i];
+        }
+        ans.push_back(value);
+    }
+    return SimpleVector<numbers>(ans, target.isRowVector());
+}
+template <typename numbers = double>
+SimpleVector<numbers> operator*(SimpleVector<numbers> target, SimpleMatrix<numbers> currentMatrix)
+{
+    vector<numbers> ans;
+    if (!target.isRowVector())
+    {
+        throw invalid_argument("Vector size does not match.");
+    }
+    else
+    {
+        // vector column to row check
+        if (target.getVector().size() != currentMatrix.getMatrix().size())
+        {
+            throw invalid_argument("Vector size does not match.");
+        }
+    }
+
+    for (int i = 0; i < (int)currentMatrix.getMatrix().size(); ++i)
+    {
+        numbers value = 0;
+        for (int j = 0; j < (int)currentMatrix.getMatrix()[0].size(); ++j)
+        {
+            value += currentMatrix.getMatrix()[i][j] * target.getVector()[j];
+        }
+        ans.push_back(value);
+    }
+    return SimpleVector<numbers>(ans, target.isRowVector());
+}
+
+/* GENERAL FUNCTIONS */
+template <typename numbers = double>
+SimpleVector<numbers> getVectorSolve(SimpleMatrix<numbers> currentMatrix, SimpleVector<numbers> vectorAns)
+{
+    SimpleMatrix<numbers> inverseMatrix = currentMatrix.getInverse();
+    SimpleVector<numbers> ans = inverseMatrix * vectorAns;
+    return ans;
+}
