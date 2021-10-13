@@ -1,108 +1,23 @@
 #include "imports.h"
+#include "base.h"
 
+// Matrix Class
 template <typename numbers = double>
-class SimpleVector
+class SimpleMatrix : public BaseMatrix<numbers>
 {
 public:
-    // Default Constructor
-    SimpleVector(){};
-    // 1D Vector
-    SimpleVector(vector<numbers> vector_coef, bool rowVector = true)
+    SimpleMatrix(vector<vector<numbers>> main_matrix) : BaseMatrix<numbers>(main_matrix)
     {
-        mainVector_ = vector_coef;
-        vectorSize_ = (int)vector_coef.size();
-        rowVector_ = rowVector;
+        // inherited variables
+        this->mainMatrix_ = main_matrix;
+        this->matrixSize_.first = main_matrix.size();
+        this->matrixSize_.second = main_matrix[0].size();
     }
 
-    void printOutline()
+    void getBaseMatrixInfo()
     {
-        string line = "";
-        if (rowVector_)
-        {
-            line += "|\t";
-            for (int i = 0; i < (int)mainVector_.size(); ++i)
-            {
-                string num_text = to_string(mainVector_[i]);
-                line += num_text.substr(0, num_text.find(".") + 3) + "  ";
-            }
-            line += "\t|";
-        }
-        else
-        {
-            for (int i = 0; i < (int)mainVector_.size(); ++i)
-            {
-                string num_text = to_string(mainVector_[i]);
-                line += "|\t" + num_text.substr(0, num_text.find(".") + 3) + "\t|";
-                if (i != mainVector_.size() - 1)
-                {
-                    line += "\n";
-                }
-            }
-        }
-        cout << line << endl;
-    }
-    // getter function (vector)
-    vector<numbers> getVector()
-    {
-        return mainVector_;
-    }
-    // getter function (vector type)
-    bool isRowVector()
-    {
-        return rowVector_;
-    }
-
-    SimpleVector<numbers> getTranspose()
-    {
-        return SimpleVector<numbers>(mainVector_, !rowVector_);
-    }
-    // scalar multiplication
-    SimpleVector<numbers> operator*(numbers target)
-    {
-        vector<numbers> ans;
-        for (int i = 0; i < (int)mainVector_.size(); ++i)
-        {
-            ans.push_back(mainVector_[i] * target);
-        }
-        return SimpleVector(ans, rowVector_); // size remain the same
-    }
-
-private:
-    vector<numbers> mainVector_;
-    unsigned int vectorSize_;
-    bool rowVector_;
-};
-
-template <typename numbers = double>
-class SimpleMatrix
-{
-public:
-    // 2D Matrix
-    SimpleMatrix(vector<vector<numbers>> matrix_coef)
-    {
-        mainMatrix_ = matrix_coef;
-        mainRow_ = mainMatrix_.size();
-        mainColumn_ = mainMatrix_[0].size();
-    }
-    void printOutline()
-    {
-        for (int i = 0; i < (int)mainMatrix_.size(); ++i)
-        {
-            string line = "|\t";
-            for (int j = 0; (int)j < mainMatrix_[0].size(); ++j)
-            {
-                string num_text = to_string(mainMatrix_[i][j]);
-                line += num_text.substr(0, num_text.find(".") + 3) + "  ";
-            }
-            line += "\t|";
-            cout << line << endl;
-        }
-    }
-
-    void getMatrixInfo()
-    {
-        std::cout << "Matrix row:\t\t" << mainRow_ << std::endl;
-        std::cout << "Matrix column:\t\t" << mainColumn_ << std::endl;
+        std::cout << "Matrix row:\t\t" << this->matrixSize_.first << std::endl;
+        std::cout << "Matrix column:\t\t" << this->matrixSize_.second << std::endl;
         numbers determinant = this->getDeterminant();
         if (determinant)
         {
@@ -116,59 +31,38 @@ public:
 
     bool isSquareMatrix()
     {
-        bool ans = (mainRow_ == mainColumn_) ? true : false;
+        bool ans = (this->matrixSize_.first == this->matrixSize_.second) ? true : false;
         return ans;
-    }
-    // getter function
-    vector<vector<numbers>> getMatrix()
-    {
-        return mainMatrix_;
     }
 
     numbers getDeterminant()
     {
-        numbers ans = this->findDeterminant(mainMatrix_);
+        numbers ans = this->findDeterminant(this->mainMatrix_);
         return ans;
     }
 
-    SimpleMatrix<numbers> getTranspose(vector<vector<numbers>> currentMatrix = {{}})
+    SimpleMatrix<numbers> getTranspose()
     {
-        vector<vector<numbers>> ans;
-        // default to defined matrix
-        if (currentMatrix[0].empty())
-        {
-            currentMatrix = mainMatrix_;
-        }
-        for (int i = 0; i < (int)mainRow_; ++i)
-        {
-            vector<numbers> transposed_row = {};
-            for (int j = 0; j < (int)mainColumn_; j++)
-            {
-                transposed_row.push_back(currentMatrix[j][i]);
-            }
-            ans.push_back(transposed_row);
-        }
-        return SimpleMatrix<numbers>(ans);
+        BaseMatrix<numbers> ans = this->getBaseTranspose();
+        return SimpleMatrix<numbers>(ans.getBaseMatrix());
     }
 
     SimpleMatrix<numbers> getAdjoint()
     {
-        int currentRowNumber = mainMatrix_.size();
-        int currentColumnNumber = mainMatrix_[0].size();
-        if (currentRowNumber < 2 && currentColumnNumber < 2)
+        if (this->matrixSize_.first < 2 && this->matrixSize_.second < 2)
         {
-            return mainMatrix_;
+            return this->mainMatrix_;
         }
         vector<vector<numbers>> ans;
-        for (int i = 0; i < (int)currentRowNumber; ++i)
+        for (int i = 0; i < this->matrixSize_.first; ++i)
         {
             vector<numbers> adjointRow = {};
-            for (int j = 0; j < (int)currentColumnNumber; ++j)
+            for (int j = 0; j < this->matrixSize_.second; ++j)
             {
                 int sign = ((i + j + 1) % 2 == 1) ? 1 : -1;
 
                 // Determinant of Minor Handling //
-                vector<vector<numbers>> minor = findMinor(i, j, mainMatrix_);
+                vector<vector<numbers>> minor = findMinor(i, j, this->mainMatrix_);
                 numbers determinantMinor = this->findDeterminant(minor);
                 numbers pRowValue = sign * determinantMinor;
                 // END //
@@ -187,56 +81,38 @@ public:
         {
             return {{}};
         }
-        SimpleMatrix<numbers> transposedMatrix = this->getTranspose(this->getAdjoint().getMatrix());
+        SimpleMatrix<numbers> adjoinMatrix = SimpleMatrix<numbers>(this->getAdjoint().getBaseMatrix());
+        SimpleMatrix<numbers> transposedMatrix = adjoinMatrix.getTranspose();
         SimpleMatrix<numbers> inverseMatrix = transposedMatrix.operator*(1 / determinant);
         return inverseMatrix;
-    }
-    // Operator overloading of type SimpleMatrix
-    SimpleMatrix<numbers> operator*(SimpleMatrix<numbers> target)
-    {
-        // check valid
-        vector<vector<numbers>> ans;
-        if (mainMatrix_[0].size() != target.mainMatrix_.size())
-        {
-            throw invalid_argument("Matrix size does not match.");
-        }
-        for (int i = 0; i < (int)mainMatrix_.size(); ++i)
-        {
-            vector<numbers> currentRow = {};
-            for (int j = 0; j < (int)target.mainMatrix_[0].size(); ++j)
-            {
-                numbers value = 0;
-                for (int k = 0; k < (int)target.mainMatrix_.size(); ++k)
-                {
-                    value += mainMatrix_[i][k] * target.mainMatrix_[k][j];
-                }
-                currentRow.push_back(value);
-            }
-            ans.push_back(currentRow);
-        }
-        return SimpleMatrix<numbers>(ans);
     }
     // Operator overloading of type Scalar
     SimpleMatrix<numbers> operator*(numbers target)
     {
         vector<vector<numbers>> ans;
-        for (int i = 0; i < (int)mainMatrix_.size(); ++i)
+        for (int i = 0; i < (int)this->mainMatrix_.size(); ++i)
         {
             vector<numbers> currentRow = {};
-            for (int j = 0; j < (int)mainMatrix_[0].size(); ++j)
+            for (int j = 0; j < (int)this->mainMatrix_[0].size(); ++j)
             {
-                currentRow.push_back(mainMatrix_[i][j] * target);
+                currentRow.push_back(this->mainMatrix_[i][j] * target);
             }
             ans.push_back(currentRow);
         }
         return SimpleMatrix<numbers>(ans);
     }
+    // Operator overloading of type SimpleMatrix
+    SimpleMatrix<numbers> operator*(SimpleMatrix<numbers> target)
+    {
+        if (this->mainMatrix_[0].size() != target.mainMatrix_.size())
+        {
+            throw invalid_argument("Matrix size does not match.");
+        }
+        BaseMatrix<numbers> ans = BaseMatrix<numbers>(this->mainMatrix_) * BaseMatrix<numbers>(target.mainMatrix_);
+        return SimpleMatrix<numbers>(ans);
+    }
 
 private:
-    vector<vector<numbers>> mainMatrix_;
-    unsigned int mainRow_, mainColumn_;
-
-    // private methods
     numbers tbtDeterminant(vector<vector<numbers>> currentMatrix)
     {
         if (currentMatrix.size() == 2 && currentMatrix[0].size() == 2)
@@ -298,6 +174,93 @@ private:
     }
 };
 
+// Vector Class
+template <typename numbers = double>
+class SimpleVector : public BaseMatrix<numbers>
+{
+public:
+    SimpleVector(vector<numbers> main_vector, bool row_vector = true) : BaseMatrix<numbers>(main_vector, row_vector)
+    {
+        vector<vector<numbers>> dummy;
+        this->isVector_ = true;
+        if (row_vector)
+        {
+            this->matrixSize_.first = 1;
+            this->matrixSize_.second = main_vector.size();
+            dummy.push_back(main_vector);
+        }
+        else
+        {
+            this->matrixSize_.first = main_vector.size();
+            this->matrixSize_.second = 1;
+            for (int i = 0; i < main_vector.size(); ++i)
+            {
+                dummy.push_back({main_vector[i]});
+            }
+        }
+        this->mainMatrix_ = dummy;
+    }
+
+    vector<numbers> getVector()
+    {
+        vector<numbers> current_vector = this->toVector(this->getBaseMatrix());
+        return current_vector;
+    }
+
+    bool isRowVector()
+    {
+        return this->matrixSize_.first == 1;
+    }
+
+    SimpleVector<numbers> getTranspose()
+    {
+        BaseMatrix<numbers> ans_base = this->getBaseTranspose();
+        vector<numbers> ans_vector = this->toVector(ans_base.getBaseMatrix());
+        return SimpleVector<numbers>(ans_vector, !this->isRowVector());
+    }
+    // Operator overloading of type Scalar
+    SimpleVector<numbers> operator*(numbers target)
+    {
+        vector<numbers> ans;
+        for (int i = 0; i < this->mainMatrix_.size(); ++i)
+        {
+            for (int j = 0; j < this->mainMatrix_[0].size(); ++j)
+            {
+                ans.push_back(this->mainMatrix_[i][j] * target);
+            }
+        }
+        return SimpleVector(ans, this->isRowVector());
+    }
+    // Operator overloading of type SimpleVector (return BaseClass - Vector, Matrix)
+    BaseMatrix<numbers> operator*(SimpleVector<numbers> target)
+    {
+        if (this->mainMatrix_[0].size() != target.mainMatrix_.size())
+        {
+            throw invalid_argument("Vector size does not match.");
+        }
+        BaseMatrix<numbers> ans = BaseMatrix<numbers>(this->mainMatrix_) * BaseMatrix<numbers>(target.mainMatrix_);
+        return ans;
+    }
+
+private:
+    vector<numbers> toVector(vector<vector<numbers>> current_matrix)
+    {
+        vector<numbers> ans;
+        if (current_matrix.size() == 1)
+        {
+            ans = current_matrix[0];
+        }
+        else
+        {
+            for (int i = 0; i < current_matrix.size(); ++i)
+            {
+                ans.push_back(current_matrix[i][0]);
+            }
+        }
+        return ans;
+    }
+};
+
 /* OPERATOR OVERLOADING */
 
 // SCALAR (other ordering handled in class declaration)
@@ -315,12 +278,12 @@ template <typename numbers = double>
 SimpleMatrix<numbers> operator*(numbers target, SimpleMatrix<numbers> currentMatrix)
 {
     vector<vector<numbers>> ans;
-    for (int i = 0; i < (int)currentMatrix.getMatrix().size(); ++i)
+    for (int i = 0; i < (int)currentMatrix.getBaseMatrix().size(); ++i)
     {
         vector<numbers> currentRow = {};
-        for (int j = 0; j < (int)currentMatrix.getMatrix()[0].size(); ++j)
+        for (int j = 0; j < (int)currentMatrix.getBaseMatrix()[0].size(); ++j)
         {
-            currentRow.push_back(currentMatrix.getMatrix()[i][j] * target);
+            currentRow.push_back(currentMatrix.getBaseMatrix()[i][j] * target);
         }
         ans.push_back(currentRow);
     }
@@ -332,25 +295,16 @@ template <typename numbers = double>
 SimpleVector<numbers> operator*(SimpleMatrix<numbers> currentMatrix, SimpleVector<numbers> target)
 {
     vector<numbers> ans;
-    if (target.isRowVector())
+    if (target.isRowVector() || currentMatrix.getBaseMatrix()[0].size() != target.getVector().size())
     {
         throw invalid_argument("Vector size does not match.");
     }
-    else
-    {
-        // column to vector row check
-        if (currentMatrix.getMatrix()[0].size() != target.getVector().size())
-        {
-            throw invalid_argument("Vector size does not match.");
-        }
-    }
-
-    for (int i = 0; i < (int)currentMatrix.getMatrix().size(); ++i)
+    for (int i = 0; i < (int)currentMatrix.getBaseMatrix().size(); ++i)
     {
         numbers value = 0;
-        for (int j = 0; j < (int)currentMatrix.getMatrix()[0].size(); ++j)
+        for (int j = 0; j < (int)currentMatrix.getBaseMatrix()[0].size(); ++j)
         {
-            value += target.getVector()[j] * currentMatrix.getMatrix()[j][i];
+            value += target.getVector()[j] * currentMatrix.getBaseMatrix()[j][i];
         }
         ans.push_back(value);
     }
@@ -367,18 +321,18 @@ SimpleVector<numbers> operator*(SimpleVector<numbers> target, SimpleMatrix<numbe
     else
     {
         // vector column to row check
-        if (target.getVector().size() != currentMatrix.getMatrix().size())
+        if (target.getVector().size() != currentMatrix.getBaseMatrix().size())
         {
             throw invalid_argument("Vector size does not match.");
         }
     }
 
-    for (int i = 0; i < (int)currentMatrix.getMatrix().size(); ++i)
+    for (int i = 0; i < (int)currentMatrix.getBaseMatrix().size(); ++i)
     {
         numbers value = 0;
-        for (int j = 0; j < (int)currentMatrix.getMatrix()[0].size(); ++j)
+        for (int j = 0; j < (int)currentMatrix.getBaseMatrix()[0].size(); ++j)
         {
-            value += currentMatrix.getMatrix()[i][j] * target.getVector()[j];
+            value += currentMatrix.getBaseMatrix()[i][j] * target.getVector()[j];
         }
         ans.push_back(value);
     }
